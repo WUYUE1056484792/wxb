@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="GoodMapper">
+    <!-- 列表 -->
+    <select id="datalistPageGood" parameterType="page" resultType="pd">
+        SELECT
+            DISTINCT
+            a.universalid,
+            a.shop_id,
+            e.shop_name,
+            a.good_id,
+            a.good_name,
+            a.good_type_one_id,
+            f.good_type_one_name,
+            a.good_type_two_id,
+            g.good_type_two_name,
+            a.good_type_three_id,
+            h.good_type_three_name,
+            a.acronym,
+            a.good_unit_id,
+            b.dictionary_name,
+            a.sale_status_id,
+            c.sale_name,
+            a.good_introduce,
+            a.virtual_count,
+            a.good_img_id,
+            a.navigation_id,
+            d.navigation_name,
+            i.good_count,
+            j.good_price
+        FROM
+            e_good a
+        LEFT JOIN
+            e_dictionary b
+        ON
+            a.good_unit_id=b.dictionary_id
+        AND
+            b.dictionary_type='good_unit_type'
+        LEFT JOIN
+            (SELECT dictionary_id,dictionary_name sale_name FROM e_dictionary where dictionary_type='sale_status_id') c
+        ON
+            a.sale_status_id=c.dictionary_id
+        LEFT JOIN
+            e_shop_navigation d
+        ON
+            a.navigation_id=d.navigation_id
+        LEFT JOIN
+            e_shop e
+        ON
+            a.shop_id=e.shop_id
+        LEFT JOIN
+            d_good_type_one f
+        ON
+            a.good_type_one_id=f.good_type_one_id
+        LEFT JOIN
+            d_good_type_two g
+        ON
+            a.good_type_two_id=g.good_type_two_id
+        LEFT JOIN
+            d_good_type_three h
+        ON
+            a.good_type_three_id=h.good_type_three_id
+        LEFT JOIN
+            c_stock i
+        ON
+            a.good_id=i.good_id
+        LEFT JOIN
+            c_good_price j
+        ON
+            a.good_id=j.good_id
+        where 1=1
+        AND
+            a.sale_status_id!='delete_sale'
+        <if test="pd.USERNAME != null and pd.USERNAME != ''">
+            and(
+            e.shop_name   LIKE CONCAT(CONCAT('%', #{pd.USERNAME}),'%')
+            or
+            a.good_name LIKE CONCAT(CONCAT('%', #{pd.USERNAME}),'%')
+            or
+            a.acronym LIKE CONCAT(CONCAT('%', #{pd.USERNAME}),'%')
+            or
+            b.dictionary_name LIKE CONCAT(CONCAT('%', #{pd.USERNAME}),'%')
+            or
+            d.navigation_name LIKE CONCAT(CONCAT('%', #{pd.USERNAME}),'%')
+            )
+        </if>
+    </select>
+
+
+
+
+    <!-- 通过ID获取数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+      SELECT
+           DISTINCT
+           a.universalid,
+           a.shop_id,
+           e.shop_name,
+           a.good_id,
+           a.good_name,
+           a.good_type_one_id,
+           f.good_type_one_name,
+           a.good_type_two_id,
+           g.good_type_two_name,
+           a.good_type_three_id,
+           h.good_type_three_name,
+           a.acronym,
+           a.good_unit_id,
+           b.dictionary_name,
+           a.sale_status_id,
+           c.sale_name,
+           a.good_introduce,
+           a.virtual_count,
+           a.good_img_id,
+           a.navigation_id two_navigation_id,
+           d.navigation_name two_navigation_name,
+           d.top_navigation_id one_navigation_id,
+           k.navigation_name one_navigation_name,
+           i.good_count,
+           j.good_price
+        FROM
+           e_good a
+        LEFT JOIN
+           e_dictionary b
+        ON
+           a.good_unit_id=b.dictionary_id
+        AND
+           b.dictionary_type='good_unit_type'
+        LEFT JOIN
+          (SELECT dictionary_id,dictionary_name sale_name FROM e_dictionary where dictionary_type='sale_status_id') c
+        ON
+           a.sale_status_id=c.dictionary_id
+        LEFT JOIN
+           e_shop_navigation d
+        ON
+           a.navigation_id=d.navigation_id
+        LEFT JOIN
+           e_shop e
+        ON
+           a.shop_id=e.shop_id
+        LEFT JOIN
+           d_good_type_one f
+        ON
+           a.good_type_one_id=f.good_type_one_id
+        LEFT JOIN
+           d_good_type_two g
+        ON
+           a.good_type_two_id=g.good_type_two_id
+        LEFT JOIN
+           d_good_type_three h
+        ON
+           a.good_type_three_id=h.good_type_three_id
+        LEFT JOIN
+           c_stock i
+        ON
+           a.good_id=i.good_id
+        LEFT JOIN
+           c_good_price j
+        ON
+           a.good_id=j.good_id
+        LEFT JOIN
+           e_shop_navigation k
+        ON
+           d.top_navigation_id=k.navigation_id
+        where
+        a.universalid = #{universalid}
+    </select>
+
+
+    <!-- 查询一级分类 -->
+    <select id="findGood_type_one"  resultType="pd">
+        SELECT
+            good_type_one_id,good_type_one_name
+        FROM
+            d_good_type_one
+    </select>
+
+
+    <!-- 查询二级分类 -->
+    <select id="findGood_type_two"  resultType="pd" parameterType="pd">
+        SELECT
+           good_type_two_id,good_type_two_name
+        FROM
+           d_good_type_two
+        WHERE
+           good_type_one_id=#{one_id}
+    </select>
+
+
+    <!-- 查询二级导航 -->
+    <select id="findTwoNavigation"  resultType="pd" parameterType="pd">
+        SELECT
+           navigation_id,navigation_name
+        FROM
+           e_shop_navigation
+        WHERE
+           top_navigation_id=#{one_navigation}
+    </select>
+
+
+    <!-- 查询商品价格是否有-->
+    <select id="findCountPrice"  resultType="pd" parameterType="pd">
+        SELECT
+           COUNT(*) count
+        FROM
+           c_good_price
+        WHERE
+        good_id=#{good_id}
+    </select>
+
+
+
+    <!-- 新增商品价格-->
+    <insert id="savePrice" parameterType="pd">
+        insert into c_good_price(
+        universalid,
+        good_price_id,
+        good_price,
+        good_id,
+        shop_id,
+        add_time
+        ) values (
+        #{universalid},
+        #{good_price_id},
+        #{good_price},
+        #{good_id},
+        #{shop_id2},
+        #{addtime}
+        )
+    </insert>
+
+    <!-- 查询三级分类 -->
+    <select id="findGood_type_three"  resultType="pd" parameterType="pd">
+        SELECT
+        good_type_three_id,good_type_three_name
+        FROM
+        d_good_type_three
+        WHERE
+        good_type_two_id=#{two_id}
+    </select>
+
+
+    <!-- 查询商品单位 -->
+    <select id="findUnit"  resultType="pd">
+        SELECT
+        dictionary_id good_unit_id,dictionary_name
+        FROM
+        e_dictionary
+        WHERE
+          dictionary_type='good_unit_type'
+    </select>
+
+    <!-- 查询商品单位 -->
+    <select id="findNavigation"  resultType="pd" parameterType="pd">
+        SELECT
+           navigation_id,navigation_name
+        FROM
+           e_shop_navigation
+        WHERE
+           shop_id=#{shop_id}
+        AND
+           navigation_type_id='level_one'
+    </select>
+
+
+    <!-- 修改商品信息 -->
+    <update id="edit" parameterType="pd">
+        update  e_good
+        set
+        good_name = #{good_name},
+        good_type_one_id = #{good_type_one_id},
+        good_type_two_id = #{good_type_two_id},
+        good_type_three_id = #{good_type_three_id},
+        acronym = #{acronym},
+        good_unit_id = #{good_unit_id},
+        good_introduce = #{good_introduce},
+        virtual_count = #{virtual_count},
+        navigation_id = #{navigation_id2}
+        where
+        universalid = #{universalid}
+    </update>
+
+
+    <!-- 修改商品信息 -->
+    <update id="editPrice" parameterType="pd">
+        update  c_good_price
+        set
+          good_price = #{good_price}
+        where
+           good_id = #{good_id}
+    </update>
+
+    <!-- 修改商品信息 -->
+    <update id="delete" parameterType="pd">
+        update
+          e_good
+        set
+          sale_status_id = 'delete_sale'
+        where
+          universalid = #{universalid}
+    </update>
+
+
+    <!-- 批量删除 -->
+    <update id="deleteAll" parameterType="String">
+        update  e_good
+        set
+        sale_status_id = 'delete_sale'
+        where
+        universalid in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+
+
+    <!-- 新增商品-->
+    <insert id="save" parameterType="pd">
+        insert into e_good(
+        universalid,
+        shop_id,
+        good_id,
+        good_name,
+        good_type_one_id,
+        good_type_two_id,
+        good_type_three_id,
+        good_unit_id,
+        sale_status_id,
+        good_introduce,
+        virtual_count,
+        acronym,
+        good_img_id,
+        navigation_id,
+        add_time
+        ) values (
+        #{universalid},
+        #{shop_id2},
+        #{good_id},
+        #{good_name},
+        #{good_type_one_id},
+        #{good_type_two_id},
+        #{good_type_three_id},
+        #{good_unit_id},
+        #{sale_status_id},
+        #{good_introduce},
+        #{virtual_count},
+        #{acronym},
+        #{good_img_id},
+        #{navigation_id2},
+        #{addtime}
+        )
+    </insert>
+
+</mapper>

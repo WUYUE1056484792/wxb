@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CustomerMapper">
+	
+	
+
+	
+	
+	<!-- 列表 -->
+	<select id="datalistPageCustomer" parameterType="page" resultType="pd">
+    SELECT  a.* ,b.dictionary_name as user_status_name,c.dictionary_name as user_type_name
+	from e_user a
+	LEFT JOIN e_dictionary b
+	on a.user_status_id=b.dictionary_id and  b.dictionary_type='user_status_id'
+	LEFT JOIN e_dictionary c
+	on a.user_type_id=c.dictionary_id  and  c.dictionary_type='user_type_id'
+        <if test="pd.USERNAME !=null and pd.USERNAME!=''">
+     WHERE   locate(#{pd.USERNAME},a.user_id )
+            OR  locate(#{pd.USERNAME},a.user_name )
+            OR
+            locate(#{pd.USERNAME},a.user_nickname )
+        </if>
+	ORDER BY a.creat_time DESC
+	</select>
+
+
+    <select id="ListDictionary" parameterType="pd" resultType="pd">
+      SELECT * from e_dictionary
+      where dictionary_type=#{dictionary_type}
+    AND dictionary_status=#{dictionary_status}
+   ORDER BY add_time
+    </select>
+
+
+
+
+	<select id="findCustomerByUiId" parameterType="page" resultType="pd">
+			SELECT  a.* ,b.dictionary_name as user_status_name,c.dictionary_name as user_type_name
+	from e_user a
+	LEFT JOIN e_dictionary b
+	on a.user_status_id=b.dictionary_id and  b.dictionary_type='user_status_id'
+	LEFT JOIN e_dictionary c
+	on a.user_type_id=c.dictionary_id  and  c.dictionary_type='user_type_id'
+		where a.universalid=#{universalid}
+	</select>
+
+    <update id="editCustomer" parameterType="pd">
+        update e_user set
+        universalid=universalid
+        <if test="user_name!=null and user_name!=null">
+           , user_name=#{user_name}
+        </if>
+        <if test="user_nickname !=null and user_nickname!=null">
+            ,user_nickname=#{user_nickname}
+        </if>
+        <if test="user_status_id!=null and user_status_id!=null">
+           , user_status_id=#{user_status_id}
+        </if>
+        <if test="user_type_id!=null and user_type_id!=null">
+            ,user_type_id=#{user_type_id}
+        </if>
+        <if test="user_password!=null and user_password!=null">
+           , user_password=#{user_password}
+        </if>
+        <if test="user_email!=null and user_email!=null">
+            ,user_email=#{user_password}
+        </if>
+
+        where universalid=#{universalid}
+    </update>
+
+	
+</mapper>

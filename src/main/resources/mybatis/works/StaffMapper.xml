@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="StaffMapper">
+
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+			a.shop_staff_id,
+			a.shop_staff_type_id,
+			a.shop_staff_name,
+			a.shop_id,
+			a.shop_staff_tel,
+			b.role_name,
+			c.user_tel,
+			c.user_nickname,
+			d.shop_name,
+			a.universalid
+		from
+			c_shop_staff a
+		LEFT JOIN
+			d_role b
+		ON
+			b.role_id = a.shop_staff_type_id
+		LEFT JOIN
+			e_user c
+		ON
+			c.user_id=a.shop_staff_id
+		LEFT JOIN
+			e_shop d
+		ON
+			a.shop_id=d.shop_id
+           where 1=1
+		<if test="pd.USERNAME != null and pd.USERNAME != ''">
+			and(
+            a.shop_staff_name   LIKE CONCAT(CONCAT('%', #{pd.USERNAME}),'%')
+			or
+			c.user_tel LIKE CONCAT(CONCAT('%', #{pd.USERNAME}),'%')
+			or
+			d.shop_name LIKE CONCAT(CONCAT('%', #{pd.USERNAME}),'%')
+            or
+            b.role_name LIKE CONCAT(CONCAT('%', #{pd.USERNAME}),'%')
+			)
+		</if>
+	</select>
+
+
+
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from c_shop_staff
+		where
+		universalid in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+
+
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select
+			a.shop_staff_id,
+			a.shop_staff_type_id,
+			a.shop_staff_name,
+			a.shop_id,
+			a.shop_staff_tel,
+			b.role_name,
+			b.role_id,
+			c.user_tel,
+			d.shop_name,
+			a.universalid
+		from
+			c_shop_staff a
+		LEFT JOIN
+			d_role b
+		ON
+			b.role_id = a.shop_staff_type_id
+		LEFT JOIN
+			e_user c
+		ON
+			c.user_id=a.shop_staff_id
+		LEFT JOIN
+			e_shop d
+		ON
+			a.shop_id=d.shop_id
+		where
+		a.universalid = #{universalid}
+	</select>
+
+
+
+	<!-- 查询角色 -->
+	<select id="findRole"  resultType="pd">
+		select
+		   role_id,
+		  role_name
+		FROM
+		  d_role
+		    WHERE
+       role_id!='1'
+	</select>
+
+
+    <!-- 查询角色 -->
+    <select id="findShop"  resultType="pd">
+        select
+          shop_id,
+          shop_name
+        FROM
+          e_shop
+        WHERE
+          shop_validate_status_id='SHOP_USE'
+    </select>
+
+
+	<!-- 查询角色 -->
+	<select id="findUser"  resultType="pd">
+		select
+		user_id,
+		user_tel
+		FROM
+		e_user
+		WHERE
+		user_status_id='NORMAL'
+	</select>
+
+
+	<!-- 查询用户昵称 -->
+	<select id="findUserNickname" parameterType="pd" resultType="pd">
+	   select
+		user_nickname
+		FROM
+		e_user
+		WHERE
+		user_id=#{user_id}
+	</select>
+
+
+
+	<!-- 修改员工橘色 -->
+	<update id="edit" parameterType="pd">
+		update  c_shop_staff
+		set
+		shop_staff_type_id = #{role_id},
+		shop_staff_name = #{shop_staff_name}
+		where
+		universalid = #{universalid}
+	</update>
+
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into c_shop_staff(
+		universalid,
+		shop_staff_id,
+		shop_staff_type_id,
+		shop_id,
+		shop_staff_tel,
+		shop_staff_status_id,
+		shop_staff_name
+		) values (
+		#{universalid},
+		#{user_id},
+		#{role_id},
+		#{shop_id},
+		#{user_tel},
+		'NORMAL',
+		#{user_nickname}
+		)
+	</insert>
+
+
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from c_shop_staff
+		where
+		universalid = #{universalid}
+	</delete>
+
+</mapper>

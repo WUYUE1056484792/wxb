@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ShopSortMapper">
+
+	<!-- 所有店铺 -->
+	<select id="findShopCount"  resultType="pd">
+		select
+			count(shop_id) count
+		FROM
+			e_shop
+	</select>
+
+
+	<!-- 正常使用所有店铺 -->
+	<select id="findShopCountUSE"  resultType="pd">
+		select
+		count(shop_id) count
+		FROM
+		e_shop
+        WHERE
+      shop_validate_status_id = 'SHOP_USE'
+	</select>
+
+
+	<!-- 未正常所有店铺 -->
+	<select id="findShopCountNOUSE"  resultType="pd">
+		select
+		count(shop_id) count
+		FROM
+		e_shop
+		WHERE
+      shop_validate_status_id != 'SHOP_USE'
+	</select>
+
+
+	<!-- 审核中的店铺 -->
+	<select id="findShopCountAPP"  resultType="pd">
+		select
+		count(shop_id) count
+		FROM
+		e_shop
+		WHERE
+		shop_validate_status_id = 'SHOP_APP'
+	   OR
+	    shop_validate_status_id = 'SHOP_SET'
+	</select>
+
+
+	<!-- 冻结的店铺数量 -->
+	<select id="findShopCountSHOP_FRE"  resultType="pd">
+		select
+		count(shop_id) count
+		FROM
+		e_shop
+		WHERE
+		shop_validate_status_id = 'SHOP_FRE'
+		OR
+		shop_validate_status_id = 'SHOP_DEL'
+	</select>
+
+	<!-- 冻结的店铺数量 -->
+	<select id="findShopCountSHOP_SET"  resultType="pd">
+		select
+		count(shop_id) count
+		FROM
+		e_shop
+		WHERE
+		shop_validate_status_id = 'SHOP_SET'
+	</select>
+
+
+
+    <!-- 正常用户数 -->
+    <select id="findCountNORMAL_USER" parameterType="pd" resultType="pd">
+        select
+           count(user_id) count
+        FROM
+           e_user
+        WHERE
+         1=1
+        <if test="null!=user_status_id and user_status_id !=''">
+            OR
+            user_status_id = #{user_status_id}
+        </if>
+        <if test="null!=user_status_id2 and user_status_id2 !=''">
+            OR
+			user_status_id = #{user_status_id2}
+        </if>
+        <if test="null!=user_status_id3 and user_status_id3 !=''">
+            OR
+			user_status_id = #{user_status_id3}
+        </if>
+        <if test="null!=user_status_id4 and user_status_id4 !=''">
+            OR
+			user_status_id = #{user_status_id4}
+        </if>
+    </select>
+
+
+	<!-- 正常用户数 -->
+	<select id="findSevenOrderSum" parameterType="pd" resultType="pd">
+       select
+           SUM(order_amount) amount
+       FROM
+           e_order
+      WHERE
+          1=1
+		<if test="null!=day and day !=''">
+			AND
+			   date_format(pay_time,'%Y-%m-%d') = date_format(#{day},'%Y-%m-%d')
+		</if>
+	</select>
+
+
+
+    <!-- 店铺排名 -->
+    <select id="findShopRanking" parameterType="pd" resultType="pd">
+        SELECT
+           a.id,a.amounts,b.shop_name
+        FROM
+           e_statistics a
+        LEFT JOIN
+           e_shop b
+        ON
+           a.id = b.shop_id
+        WHERE
+           a.type_id='shop_show'
+        ORDER BY
+           amounts DESC
+    </select>
+
+
+
+	<!-- 店铺分类分布 -->
+	<select id="findShopSort" parameterType="pd" resultType="pd">
+		SELECT
+				a.id,a.amounts,a.name
+		FROM
+				e_statistics a
+		WHERE
+				a.type_id='good_type_show'
+	</select>
+
+
+
+    <!-- 买家top10 -->
+    <select id="findShopCustomer" parameterType="pd" resultType="pd">
+        SELECT
+          a.id,a.amounts,a.name
+        FROM
+          e_statistics a
+        WHERE
+          a.type_id='customer_show'
+        ORDER BY
+           amounts DESC
+    </select>
+
+
+	<!-- 删除买家top10-->
+	<delete id="deleteShopCustomer" parameterType="pd">
+		delete from e_statistics
+		where
+		type_id = 'customer_show'
+	</delete>
+
+
+
+	<!-- 删除店铺排名的数据-->
+	<delete id="deleteShopRank" parameterType="pd">
+		delete from e_statistics
+		where
+		type_id = 'shop_show'
+	</delete>
+
+
+
+
+	<!-- 真实所有买家top10 -->
+	<select id="selectBuyer" resultType="pd">
+		SELECT
+		   a.buyer_id,b.user_nickname,SUM(a.order_amount) amount,COUNT(a.order_id) count
+		FROM
+		   e_order a
+		LEFT JOIN
+		   e_user b
+		ON
+		   a.buyer_id = b.user_id
+		GROUP BY
+		   a.buyer_id
+		ORDER BY
+		   a.order_amount DESC
+	</select>
+
+
+
+	<!-- 新增买家订单top10-->
+	<insert id="saveBuyerTop10" parameterType="pd">
+		insert into e_statistics(
+			universalid,
+			id,
+			name,
+			amounts,
+			counts,
+			add_time,
+			type_id
+		) values (
+			#{uuid},
+			#{id},
+			#{name},
+			#{amounts},
+			#{counts},
+			str_to_date(#{add_time},'%Y-%m-%d %H:%i:%s'),
+			#{type_id}
+			)
+	</insert>
+
+
+	<!-- 新增商品一级分类数据-->
+	<insert id="saveGoodType" parameterType="pd">
+		insert into e_statistics(
+		universalid,
+		id,
+		name,
+		amounts,
+		counts,
+		add_time,
+		type_id
+		) values (
+		#{uuid},
+		#{id},
+		#{name},
+		#{amounts},
+		#{counts},
+		str_to_date(#{add_time},'%Y-%m-%d %H:%i:%s'),
+		#{type_id}
+		)
+	</insert>
+
+
+	<!-- 新增当天订单总额-->
+	<insert id="saveOrderSum" parameterType="pd">
+		insert into e_statistics(
+		universalid,
+		id,
+		name,
+		amounts,
+		add_time,
+		type_id,
+		show_date
+		) values (
+		#{uuid},
+		#{uuid},
+		#{uuid},
+		#{Sum},
+		str_to_date(#{add_time},'%Y-%m-%d %H:%i:%s'),
+		#{type_id},
+		#{show_date}
+		)
+	</insert>
+
+
+	<!-- 删除商品分类数据-->
+	<delete id="deleteGoodType" parameterType="pd">
+		delete from e_statistics
+		where
+		type_id = 'good_type_show'
+	</delete>
+
+
+    <!-- 删除商品分类数据-->
+    <delete id="deleteOrderSum" parameterType="pd">
+        delete from e_statistics
+        where
+        type_id = 'order_show'
+    </delete>
+
+
+
+
+	<!-- 商品一级分类-->
+	<select id="findGoodTypeList" resultType="pd">
+		SELECT
+			a.good_type_one_id,a.good_type_one_name,SUM(c.good_amount) amount,COUNT(d.order_id) count
+		FROM
+			d_good_type_one a
+		LEFT JOIN
+			e_good b
+		ON
+			a.good_type_one_id= b.good_type_one_id
+		LEFT JOIN
+			c_order_good c
+		ON
+			b.good_id = c.good_id
+		LEFT JOIN
+			e_order d
+		ON
+		   c.order_id=d.order_id
+		GROUP BY
+			a.good_type_one_id
+		ORDER BY
+			amount DESC
+	</select>
+
+
+
+
+	<!-- 店铺排名的数据-->
+	<select id="findShopRankList" resultType="pd">
+		SELECT
+			a.shop_id,shop_name,SUM(b.order_amount) amount,COUNT(b.order_id) count
+		FROM
+		   e_shop a
+		LEFT JOIN
+		   e_order b
+		ON
+		   a.shop_id = b.shop_id
+		GROUP BY
+		   a.shop_id
+		ORDER BY
+		   amount DESC
+	</select>
+
+
+
+	<!-- 新增店铺排名数据-->
+	<insert id="saveShopRank" parameterType="pd">
+		insert into e_statistics(
+		universalid,
+		id,
+		name,
+		amounts,
+		counts,
+		add_time,
+		type_id
+		) values (
+		#{uuid},
+		#{id},
+		#{name},
+		#{amounts},
+		#{counts},
+		str_to_date(#{add_time},'%Y-%m-%d %H:%i:%s'),
+		#{type_id}
+		)
+	</insert>
+
+
+
+    <!-- 平台订单总金额 -->
+    <select id="findOrderSum" parameterType="pd" resultType="pd">
+       SELECT
+          a.id,a.amounts,a.show_date
+        FROM
+          e_statistics a
+        WHERE
+          a.type_id='order_show'
+        ORDER BY
+           a.show_date ASC
+    </select>
+
+
+</mapper>

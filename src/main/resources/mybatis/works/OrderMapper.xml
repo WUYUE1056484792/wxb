@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OrderMapper">
+	
+	
+
+	
+	
+	<!-- 列表 -->
+	<select id="datalistPageOrder" parameterType="page" resultType="pd">
+        select a.universalid,a.order_id,a.order_type_id,d.dictionary_name as order_type_name,a.shop_id,b.shop_name,a.order_status_id,c.dictionary_name as order_status_name,
+        a.create_time,a.pay_time,a.order_amount,a.preferential_amount,a.seller_id,a.buyer_id,a.buyer_type_id,f.dictionary_name as buyer_type_name,g.user_nickname,g.user_name
+        ,h.shop_name as shopname
+        from e_order a
+        LEFT JOIN e_shop b
+        ON a.shop_id=b.shop_id
+        LEFT JOIN e_dictionary c
+        ON a.order_status_id=c.dictionary_id AND c.dictionary_status='1' AND c.dictionary_type='order_status'
+        LEFT JOIN e_dictionary d
+        ON a.order_type_id=d.dictionary_id AND d.dictionary_status='1' AND    d.dictionary_type='order_type'
+        LEFT JOIN e_dictionary f
+        ON a.buyer_type_id=f.dictionary_id AND f.dictionary_status='1' AND  f.dictionary_type= 'user_type_id'
+        LEFT JOIN e_user g
+        on a.buyer_id=g.user_id and a.buyer_type_id='NORMAL_USER'
+        LEFT JOIN e_shop h
+        on a.buyer_id=h.shop_id and a.buyer_type_id='normal_shop'
+        WHERE 1=1
+        <if test="pd.USERNAME !=null and pd.USERNAME!=''">
+            and   locate(#{pd.USERNAME},a.order_id )
+            OR    locate(#{pd.USERNAME},a.order_amount  )
+            OR    locate(#{pd.USERNAME},b.shop_name  )
+        </if>
+        ORDER BY a.create_time DESC
+
+	</select>
+
+
+    <select id="FindOrderByOid" parameterType="pd" resultType="pd">
+        select a.universalid,a.order_id,a.order_type_id,d.dictionary_name as order_type_name,a.shop_id,b.shop_name,a.order_status_id,c.dictionary_name as order_status_name,
+        a.create_time,a.pay_time,a.order_amount,a.preferential_amount,a.seller_id,a.buyer_id,a.buyer_type_id,f.dictionary_name as buyer_type_name,g.user_nickname,g.user_name
+        ,h.shop_name as shopname,a.receiver_name,a.receiver_tel,a.receiver_address
+
+        from e_order a
+        LEFT JOIN e_shop b
+        ON a.shop_id=b.shop_id
+        LEFT JOIN e_dictionary c
+        ON a.order_status_id=c.dictionary_id AND c.dictionary_status='1' AND c.dictionary_type='order_status'
+        LEFT JOIN e_dictionary d
+        ON a.order_type_id=d.dictionary_id AND d.dictionary_status='1' AND    d.dictionary_type='order_type'
+        LEFT JOIN e_dictionary f
+        ON a.buyer_type_id=f.dictionary_id AND f.dictionary_status='1' AND  f.dictionary_type= 'user_type_id'
+        LEFT JOIN e_user g
+        on a.buyer_id=g.user_id and a.buyer_type_id='NORMAL_USER'
+        LEFT JOIN e_shop h
+        on a.buyer_id=h.shop_id and a.buyer_type_id='normal_shop'
+        WHERE a.order_id=#{order_id}
+
+        ORDER BY a.create_time DESC
+
+    </select>
+
+    <select id="ListOrderGood" parameterType="pd" resultType="pd">
+       SELECT a.order_id,a.good_id,b.good_name,a.good_count,a.good_price,a.transaction_price,b.good_img_id,b.good_unit_id,a.transaction_price * a.good_count as sumprice,c.dictionary_name as good_unit_name
+       from c_order_good a
+       LEFT JOIN e_good b
+       ON a.good_id=b.good_id
+      LEFT JOIN e_dictionary c
+      on b.good_unit_id=c.dictionary_id and c.dictionary_type='good_unit_type'
+      where a.order_id=#{order_id}
+    </select>
+
+
+
+
+
+
+	
+</mapper>

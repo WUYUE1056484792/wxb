@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ShopMapper">
+	<!--店铺列表-->
+	<select id="shoplistPage" parameterType="page" resultType="pd" useCache="false">
+      SELECT  es.*,st.dictionary_name as shop_type_name,stt.dictionary_name as shop_validate_status_name from e_shop es
+		LEFT JOIN (SELECT * from e_dictionary ed where ed.dictionary_type='shop_type') st on es.shop_type_id = st.dictionary_id
+		LEFT JOIN (SELECT * from e_dictionary ed where ed.dictionary_type='shop_status') stt on es.shop_validate_status_id = stt.dictionary_id
+		WHERE 1=1
+		<if test="pd.searchName != null and pd.searchName != ''">
+			AND es.shop_name LIKE CONCAT(CONCAT('%', #{pd.searchName}),'%')
+		</if>
+		<if test="pd.shop_validate_status_id != null and pd.shop_validate_status_id != ''">
+			AND es.shop_validate_status_id = #{pd.shop_validate_status_id}
+		</if>
+    ORDER BY es.shop_creation_date desc
+	</select>
+	<!--查询店铺信息-->
+	<select id="findShopInfo" parameterType="pd" resultType="pd">
+      SELECT  es.*,es.shop_creation_date,st.dictionary_name as shop_type_name,stt.dictionary_name as shop_validate_status_name,b.`name` as country,cc.`name` as province,d.`name` as city,g.`name` as area  from e_shop es
+    LEFT JOIN (SELECT * from e_dictionary ed where ed.dictionary_type='shop_type') st on es.shop_type_id = st.dictionary_id
+    LEFT JOIN (SELECT * from e_dictionary ed where ed.dictionary_type='shop_status') stt on es.shop_validate_status_id = stt.dictionary_id
+        LEFT JOIN  d_country b ON es.country_code=b.code
+        LEFT JOIN  d_province cc ON es.province_code=cc.code
+        LEFT JOIN  d_city d ON es.city_code=d.code
+        LEFT JOIN  d_area g ON g.code= es.area_code
+        WHERE
+         es.shop_id = #{shop_id}
+	</select>
+
+	<!--店铺状态-->
+	<select id="listShopType" resultType="pd">
+		SELECT * from e_dictionary ed where ed.dictionary_type='shop_status'
+	</select>
+	<!--修改店铺状态-->
+	<update id="updateShopStatus" parameterType="pd">
+      update e_shop
+			set
+				shop_validate_status_id = #{shop_validate_status_id}
+			where
+				shop_id = #{shop_id}
+	</update>
+</mapper>
